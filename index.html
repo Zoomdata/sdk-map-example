@@ -1,0 +1,146 @@
+<html>
+
+<head>
+    <title>Embedded Map</title>
+
+    <!-- Dependencies -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://developer.zoomdata.com/zoomdata/sdk/2.0/zoomdata-client.js"></script>
+    <!-- <script src="http://10.2.2.202:8080/zoomdata/sdk/2.0/zoomdata-client.js"></script>  -->
+
+    <!-- Lodash.js is not a dependency for Zoomdata, but it is for some visualizations. XYZ-validate this -->
+    <!--  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js"></script> -->
+
+    <style>
+        @import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,300,400,600,700,900);
+        @import url(https://fonts.googleapis.com/css?family=Alex+Brush);
+
+        body {
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        h1 {
+            font-family: "Source Sans Pro";
+        }
+
+        p {
+            font-family: "Alex Brush";
+            font-size: 16pt;
+        }
+        
+    </style>
+
+</head>
+
+
+
+<body>
+
+    <!-- The JS code for the visualization specifies that it
+	render on the HTML element with id='visualization'.-->
+    <div>
+        <h1>Look, I Embedded a Map!</h1>
+        <div id="visualization" style="z-index:1; width: 400px; height:330px; margin-right:10px; margin-bottom:10px; float:left; padding:10px; top:20%;"></div>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque quis libero et enim interdum blandit ac sed turpis. Praesent et faucibus nisl. Ut scelerisque, sem viverra semper sodales, orci dolor venenatis lorem, in ultricies magna ipsum id felis. Duis ut pulvinar nisl. Proin sed aliquam leo, a pellentesque erat. Nulla facilisi. Phasellus egestas ut tortor ut imperdiet. Nullam consectetur auctor est. Integer a interdum ipsum. Pellentesque cursus diam dui, et pharetra lectus tincidunt id. In sodales, odio sit amet luctus sollicitudin, eros odio egestas neque, at interdum est ligula nec velit. Nunc auctor fringilla tempus.</p>
+
+        <p>Suspendisse vestibulum nulla est. Etiam tincidunt est non malesuada vestibulum. Proin vulputate, velit sit amet scelerisque placerat, ipsum sem fermentum tellus, nec vulputate massa lacus et lectus. Cras volutpat mauris in nunc iaculis, ac sodales eros ornare. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Proin magna mi, sollicitudin a erat vitae, imperdiet finibus ante. Nulla et mi viverra, ultrices lorem eget, dapibus nulla. Quisque ac sapien rhoncus lectus venenatis pharetra ut et nulla. Curabitur eget libero non mauris varius sodales. Nulla quis magna risus. Maecenas vitae urna quam. Ut viverra, libero ac iaculis varius, turpis tortor dignissim dolor, ac condimentum elit sapien id magna. Phasellus scelerisque leo nec eros scelerisque blandit. Sed imperdiet ultricies metus, ac suscipit mi viverra quis.</p>
+    </div>
+
+    <script>
+        // Embedded visualization - change color and filter
+        // This example feeds a running query to client,
+        // rather than feeding it a query config object
+
+      var application = {
+          secure: true,
+          host: 'developer.zoomdata.com',
+          port: 443, //8443
+          path: '/zoomdata'
+        };
+
+        // Security parameters
+        var credentials = {
+          key: "575e17c9e4b07b98bbfaf7c9"
+        };
+
+        // Query configuration parameters
+        var queryConfig = {
+            "sourceId":"56fa9905a7c8f1c5fe3c6cc7",
+            "filters":[],
+            "metrics":[
+                {
+                    "name":"count",
+                    "func":null
+                }
+            ],
+            "time":{
+                "timeField":"_ts"
+            },
+            "player":{
+                "pauseAfterRead":false,
+                "timeWindowScale":"ROLLING"
+            },
+            "groups":[
+                {
+                    "name":"userstate",
+                    "limit":50,
+                    "sort":{
+                        "name":"price",
+                        "dir":"desc",
+                        "metricFunc":"sum"
+                    }
+                }
+            ]
+        };
+
+        // Visualization location
+        var vizLocation = document.getElementById('visualization');
+
+        // create the client
+        ZoomdataSDK.createClient({
+            credentials: credentials,
+            application: application
+          })
+          .then(function(client) {
+            window.client = client;
+            console.log("querying");
+            window.query = client.createQuery({name: 'Real Time Sales'}, queryConfig);
+            console.log("done querying");
+            return(window.query);
+          })
+          .then(function(theQuery) {
+            console.log("about to visualize");
+            return window.client.visualize({
+                // html element to hold visualization
+                element: vizLocation,
+                // requires either a query
+                // or a query config and source object
+                query: theQuery,
+                visualization: 'Map: US Regions',
+                variables: {
+                    "Color": 'count',
+                    "Limit": 1000,
+                    "State": '{"name":"userstate","limit":50,"sort":{"name":"price","dir":"desc","metricFunc":"sum"}}',
+                    "County": "countycode",
+                    "Zip Code": "zipcode",
+                    "Tile Provider": "MapQuest (no API key required)",
+                    "Tile Provider API Key": "",
+                    "Chart Name": "",
+                    "Chart Description": ""
+                } 
+            })
+            
+          }).catch(function(error) {console.log("error: ", error);})
+            .done(function(result) {
+                console.log("done visualizing");
+                window.viz = result;
+            });
+            console.log("done visualizing");;
+        
+        </script>
+
+</body>
+
+</html>
